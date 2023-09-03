@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Body
+from models.movie import Movie
 
 app = FastAPI()
 app.title = "Movies API"
@@ -100,23 +101,25 @@ def index(id: int):
 def index(category: str):
   return [movie for movie in movies if movie["category"].lower() == category.lower()]
 
-@app.post("/movies", tags=["Movies"])
-def index(id: int = Body(...), title: str = Body(...), year: int = Body(...), director: str = Body(...), duration: str = Body(...), genre: str = Body(...), rating: float = Body(...), votes: int = Body(...), budget: int = Body(...), revenue: int = Body(...), category: str = Body(...)):
-    movie = {
-        "id": id,
-        "title": title,
-        "year": year,
-        "director": director,
-        "duration": duration,
-        "genre": genre,
-        "rating": rating,
-        "votes": votes,
-        "budget": budget,
-        "revenue": revenue,
-        "category": category,
-    }
+@app.post("/movies", tags=["Movies"], response_model=list[Movie])
+def index(movie: Movie):
     movies.append(movie)
     return movies
+
+# def index(id: int = Body(...), title: str = Body(...), year: int = Body(...), director: str = Body(...), duration: str = Body(...), genre: str = Body(...), rating: float = Body(...), votes: int = Body(...), budget: int = Body(...), revenue: int = Body(...), category: str = Body(...)):
+    # movie = {
+    #     "id": id,
+    #     "title": title,
+    #     "year": year,
+    #     "director": director,
+    #     "duration": duration,
+    #     "genre": genre,
+    #     "rating": rating,
+    #     "votes": votes,
+    #     "budget": budget,
+    #     "revenue": revenue,
+    #     "category": category,
+    # }
 
 @app.patch("/movies/{id}", tags=["Movies"])
 def index(id: int, movie: dict = Body(...)):
