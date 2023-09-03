@@ -63,9 +63,13 @@ def message():
 def index():
     return movies
 
-# @app.get("/movies/{id}", tags=["Movies"])
-# def index(request, id):
-#     return {"message": "Hello World"}
+@app.get("/movies/{id}", tags=["Movies"])
+def index(id: int):
+    for item in movies:
+        if item["id"] == id:
+            return item
+    else:
+      return []
 
 # @app.get("/movies/search", tags=["Movies"])
 # def index(request, title):
