@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 
 app = FastAPI()
 app.title = "Movies API"
@@ -12,12 +12,17 @@ app.debug = True
 
 movies = [
     {
-        "id": 1,
-        "title": "The Shawshank Redemption",
-        "year": 1994,
-        "director": "Frank Darabont",
-        "duration": "2h 22min",
-        "genre": "Crime, Drama",
+      "id": 1,
+      "title": "The Shawshank Redemption",
+      "year": 1994,
+      "director": "Frank Darabont",
+      "duration": "2h 22min",
+      "genre": "Crime, Drama",
+      "rating": 9.3,
+      "votes": 678790,
+      "budget": 16000000,
+      "revenue": 136906000,
+      "category": "Drama",
     },
     {
         "id": 2,
@@ -26,6 +31,11 @@ movies = [
         "director": "Francis Ford Coppola",
         "duration": "3h 17min",
         "genre": "Crime, Drama",
+        "rating": 9.2,
+        "votes": 4717185,
+        "budget": 20000000,
+        "revenue": 134000000,
+        "category": "Drama",
     },
     {
         "id": 3,
@@ -34,6 +44,11 @@ movies = [
         "director": "Francis Ford Coppola",
         "duration": "3h 22min",
         "genre": "Crime, Drama",
+        "rating": 9,
+        "votes": 3194518,
+        "budget": 20000000,
+        "revenue": 107200000,
+        "category": "Drama",
     },
     {
         "id": 4,
@@ -42,6 +57,11 @@ movies = [
         "director": "Christopher Nolan",
         "duration": "2h 32min",
         "genre": "Action, Crime, Drama",
+        "rating": 9,
+        "votes": 5933283,
+        "budget": 20000000,
+        "revenue": 152780000,
+        "category": "Drama",
     },
     {
         "id": 5,
@@ -50,6 +70,11 @@ movies = [
         "director": "Sidney Lumet",
         "duration": "1h 36min",
         "genre": "Crime, Drama",
+        "rating": 8.9,
+        "votes": 364583,
+        "budget": 5000000,
+        "revenue": 4206166,
+        "category": "Drama",
     },
 ]
 
@@ -71,6 +96,42 @@ def index(id: int):
     else:
       return []
 
-# @app.get("/movies/search", tags=["Movies"])
-# def index(request, title):
-#   return {"message": "Hello World"}
+@app.get("/movies/", tags=["Movies"])
+def index(category: str):
+  return [movie for movie in movies if movie["category"].lower() == category.lower()]
+
+@app.post("/movies", tags=["Movies"])
+def index(id: int = Body(...), title: str = Body(...), year: int = Body(...), director: str = Body(...), duration: str = Body(...), genre: str = Body(...), rating: float = Body(...), votes: int = Body(...), budget: int = Body(...), revenue: int = Body(...), category: str = Body(...)):
+    movie = {
+        "id": id,
+        "title": title,
+        "year": year,
+        "director": director,
+        "duration": duration,
+        "genre": genre,
+        "rating": rating,
+        "votes": votes,
+        "budget": budget,
+        "revenue": revenue,
+        "category": category,
+    }
+    movies.append(movie)
+    return movies
+
+@app.patch("/movies/{id}", tags=["Movies"])
+def index(id: int, movie: dict = Body(...)):
+    for item in movies:
+        if item["id"] == id:
+            item.update(movie)
+            return item
+    else:
+        return []
+
+@app.delete("/movies/{id}", tags=["Movies"])
+def index(id: int):
+    for item in movies:
+        if item["id"] == id:
+            movies.remove(item)
+            return movies
+    else:
+        return []
