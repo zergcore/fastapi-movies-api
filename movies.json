@@ -10,7 +10,7 @@
       "votes": 678790,
       "budget": 16000000,
       "revenue": 136906000,
-      "category": "Drama",
+      "category": "Drama"
   },
   {
       "id": 2,
@@ -23,7 +23,7 @@
       "votes": 4717185,
       "budget": 20000000,
       "revenue": 134000000,
-      "category": "Drama",
+      "category": "Drama"
   },
   {
       "id": 3,
@@ -36,7 +36,7 @@
       "votes": 3194518,
       "budget": 20000000,
       "revenue": 107200000,
-      "category": "Drama",
+      "category": "Drama"
   },
   {
       "id": 4,
@@ -49,7 +49,7 @@
       "votes": 5933283,
       "budget": 20000000,
       "revenue": 152780000,
-      "category": "Drama",
+      "category": "Drama"
   },
   {
       "id": 5,
@@ -62,6 +62,6 @@
       "votes": 364583,
       "budget": 5000000,
       "revenue": 4206166,
-      "category": "Drama",
-  },
+      "category": "Drama"
+  }
 ]

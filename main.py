@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Body, Path, Query
-from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
+from typing import List, Optional
 from models.movie import Movie
 import json
 
@@ -13,102 +14,41 @@ app.license_info = {"name": "MIT", "url": "https://opensource.org/licenses/MIT"}
 app.openapi_tags = [{"name": "Home", "description": "Home page"}]
 app.debug = True
 
-movies = [
-  {
-      "id": 1,
-      "title": "The Shawshank Redemption",
-      "year": 1994,
-      "director": "Frank Darabont",
-      "duration": "2h 22min",
-      "genre": "Crime, Drama",
-      "rating": 9.3,
-      "votes": 678790,
-      "budget": 16000000,
-      "revenue": 136906000,
-      "category": "Drama",
-  },
-  {
-      "id": 2,
-      "title": "The Godfather",
-      "year": 1972,
-      "director": "Francis Ford Coppola",
-      "duration": "3h 17min",
-      "genre": "Crime, Drama",
-      "rating": 9.2,
-      "votes": 4717185,
-      "budget": 20000000,
-      "revenue": 134000000,
-      "category": "Drama",
-  },
-  {
-      "id": 3,
-      "title": "The Godfather: Part II",
-      "year": 1974,
-      "director": "Francis Ford Coppola",
-      "duration": "3h 22min",
-      "genre": "Crime, Drama",
-      "rating": 9,
-      "votes": 3194518,
-      "budget": 20000000,
-      "revenue": 107200000,
-      "category": "Drama",
-  },
-  {
-      "id": 4,
-      "title": "The Dark Knight",
-      "year": 2008,
-      "director": "Christopher Nolan",
-      "duration": "2h 32min",
-      "genre": "Action, Crime, Drama",
-      "rating": 9,
-      "votes": 5933283,
-      "budget": 20000000,
-      "revenue": 152780000,
-      "category": "Drama",
-  },
-  {
-      "id": 5,
-      "title": "12 Angry Men",
-      "year": 1957,
-      "director": "Sidney Lumet",
-      "duration": "1h 36min",
-      "genre": "Crime, Drama",
-      "rating": 8.9,
-      "votes": 364583,
-      "budget": 5000000,
-      "revenue": 4206166,
-      "category": "Drama",
-  },
-]
+with open("movies.json") as f:
+    movies = json.load(f)
 
-@app.get("/", tags=["Home"])
+
+@app.get("/", tags=["Home"], response_class=JSONResponse, status_code=200, response_model=dict)
 def message():
-    return {"message": "Hello World"}
+    return JSONResponse(content={"message": "Hello World"}, status_code=200)
 
 
-@app.get("/movies", tags=["Movies"])
+@app.get("/movies", tags=["Movies"], response_model=List[Movie], status_code=200)
 def index():
-    return movies
+    return JSONResponse(content=movies, status_code=200)
 
 
-@app.get("/movies/{id}", tags=["Movies"])
+@app.get("/movies/{id}", tags=["Movies"], response_model=Movie, status_code=200)
 def index(id: int = Path(gt=0, le=len(movies))):
     for item in movies:
         if item["id"] == id:
-            return item
+            return JSONResponse(content=item, status_code=200)
     else:
-        return []
+        return JSONResponse(content=[], status_code=404)
 
 
-@app.get("/movies/", tags=["Movies"])
+@app.get("/movies/", tags=["Movies"], response_model=List[Movie], status_code=200)
 def index(category: str = Query(min_length=3, max_length=20)):
-    return [movie for movie in movies if movie["category"].lower() == category.lower()]
+    data = [movie for movie in movies if movie["category"].lower() == category.lower()]
+    if len(data) == 0:
+        return JSONResponse(content=[], status_code=404)
+    return JSONResponse(content=data, status_code=200)
 
 
-@app.post("/movies", tags=["Movies"], response_model=list[Movie])
+@app.post("/movies", tags=["Movies"], response_model=dict, status_code=201)
 def index(movie: Movie):
     movies.append(movie)
-    return movies
+    return JSONResponse(content={message: "Movie added successfully"}, status_code=201)
 
 
 # @app.post("/movies", tags=["Movies"], response_model=list[Movie])
@@ -127,29 +67,7 @@ def index(movie: Movie):
 #     "category": category,
 # }
 
-# @app.put("movies/{id}", tags=["Movies"], response_model=list[Movie])
-# def index(id: int, movie: Movie):
-#     update_item_encoded = jsonable_encoder(movie)
-#     for item in movies:
-#         if item["id"] == id:
-#             item.update(update_item_encoded)
-#             return movies
-#     else:
-#         return []
-
-# @app.put('/movies/{id}', tags=['Movies'])
-# def update_movie(id: int, title: str = Body(), overview:str = Body(), year:int = Body(), rating: float = Body(), category: str = Body()):
-# 	for item in movies:
-# 		if item["id"] == id:
-# 			item['title'] = title,
-# 			item['overview'] = overview,
-# 			item['year'] = year,
-# 			item['rating'] = rating,
-# 			item['category'] = category
-# 			return movies
-
-
-@app.put("/movies/{id}", tags=["Movies"], response_model=list[Movie])
+@app.put("/movies/{id}", tags=["Movies"], response_model=dict, status_code=200)
 def update_movie(id: int, movie: Movie):
     for item in movies:
         if item["id"] == id:
@@ -163,12 +81,16 @@ def update_movie(id: int, movie: Movie):
             item["revenue"] = movie.revenue
             item["rating"] = movie.rating
             item["category"] = movie.category
-            return movies
+            JSONResponse(content = {message: "Movie updated successfully"}, status_code = 200)
+    else:
+        return JSONResponse(content = {message: "Movie not found"}, status_code = 404)
 
 
-@app.delete("/movies/{id}", tags=["Movies"], response_model=list[Movie])
+@app.delete("/movies/{id}", tags=["Movies"], response_model=dict, status_code=200)
 def delete_movie(id: int):
     for item in movies:
         if item["id"] == id:
             movies.remove(item)
-            return movies
+            return JSONResponse(content = {message: "Movie deleted successfully"}, status_code = 200)
+    else:
+        return JSONResponse(content = {message: "Movie not found"}, status_code = 404)
