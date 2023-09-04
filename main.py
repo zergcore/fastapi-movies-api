@@ -1,6 +1,7 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, Path, Query
 from fastapi.encoders import jsonable_encoder
 from models.movie import Movie
+import json
 
 app = FastAPI()
 app.title = "Movies API"
@@ -13,73 +14,72 @@ app.openapi_tags = [{"name": "Home", "description": "Home page"}]
 app.debug = True
 
 movies = [
-    {
-        "id": 1,
-        "title": "The Shawshank Redemption",
-        "year": 1994,
-        "director": "Frank Darabont",
-        "duration": "2h 22min",
-        "genre": "Crime, Drama",
-        "rating": 9.3,
-        "votes": 678790,
-        "budget": 16000000,
-        "revenue": 136906000,
-        "category": "Drama",
-    },
-    {
-        "id": 2,
-        "title": "The Godfather",
-        "year": 1972,
-        "director": "Francis Ford Coppola",
-        "duration": "3h 17min",
-        "genre": "Crime, Drama",
-        "rating": 9.2,
-        "votes": 4717185,
-        "budget": 20000000,
-        "revenue": 134000000,
-        "category": "Drama",
-    },
-    {
-        "id": 3,
-        "title": "The Godfather: Part II",
-        "year": 1974,
-        "director": "Francis Ford Coppola",
-        "duration": "3h 22min",
-        "genre": "Crime, Drama",
-        "rating": 9,
-        "votes": 3194518,
-        "budget": 20000000,
-        "revenue": 107200000,
-        "category": "Drama",
-    },
-    {
-        "id": 4,
-        "title": "The Dark Knight",
-        "year": 2008,
-        "director": "Christopher Nolan",
-        "duration": "2h 32min",
-        "genre": "Action, Crime, Drama",
-        "rating": 9,
-        "votes": 5933283,
-        "budget": 20000000,
-        "revenue": 152780000,
-        "category": "Drama",
-    },
-    {
-        "id": 5,
-        "title": "12 Angry Men",
-        "year": 1957,
-        "director": "Sidney Lumet",
-        "duration": "1h 36min",
-        "genre": "Crime, Drama",
-        "rating": 8.9,
-        "votes": 364583,
-        "budget": 5000000,
-        "revenue": 4206166,
-        "category": "Drama",
-    },
+  {
+      "id": 1,
+      "title": "The Shawshank Redemption",
+      "year": 1994,
+      "director": "Frank Darabont",
+      "duration": "2h 22min",
+      "genre": "Crime, Drama",
+      "rating": 9.3,
+      "votes": 678790,
+      "budget": 16000000,
+      "revenue": 136906000,
+      "category": "Drama",
+  },
+  {
+      "id": 2,
+      "title": "The Godfather",
+      "year": 1972,
+      "director": "Francis Ford Coppola",
+      "duration": "3h 17min",
+      "genre": "Crime, Drama",
+      "rating": 9.2,
+      "votes": 4717185,
+      "budget": 20000000,
+      "revenue": 134000000,
+      "category": "Drama",
+  },
+  {
+      "id": 3,
+      "title": "The Godfather: Part II",
+      "year": 1974,
+      "director": "Francis Ford Coppola",
+      "duration": "3h 22min",
+      "genre": "Crime, Drama",
+      "rating": 9,
+      "votes": 3194518,
+      "budget": 20000000,
+      "revenue": 107200000,
+      "category": "Drama",
+  },
+  {
+      "id": 4,
+      "title": "The Dark Knight",
+      "year": 2008,
+      "director": "Christopher Nolan",
+      "duration": "2h 32min",
+      "genre": "Action, Crime, Drama",
+      "rating": 9,
+      "votes": 5933283,
+      "budget": 20000000,
+      "revenue": 152780000,
+      "category": "Drama",
+  },
+  {
+      "id": 5,
+      "title": "12 Angry Men",
+      "year": 1957,
+      "director": "Sidney Lumet",
+      "duration": "1h 36min",
+      "genre": "Crime, Drama",
+      "rating": 8.9,
+      "votes": 364583,
+      "budget": 5000000,
+      "revenue": 4206166,
+      "category": "Drama",
+  },
 ]
-
 
 @app.get("/", tags=["Home"])
 def message():
@@ -92,7 +92,7 @@ def index():
 
 
 @app.get("/movies/{id}", tags=["Movies"])
-def index(id: int):
+def index(id: int = Path(gt=0, le=len(movies))):
     for item in movies:
         if item["id"] == id:
             return item
@@ -101,7 +101,7 @@ def index(id: int):
 
 
 @app.get("/movies/", tags=["Movies"])
-def index(category: str):
+def index(category: str = Query(min_length=3, max_length=20)):
     return [movie for movie in movies if movie["category"].lower() == category.lower()]
 
 
