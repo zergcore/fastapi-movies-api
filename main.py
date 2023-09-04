@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Body
+from fastapi.encoders import jsonable_encoder
 from models.movie import Movie
 
 app = FastAPI()
@@ -13,17 +14,17 @@ app.debug = True
 
 movies = [
     {
-      "id": 1,
-      "title": "The Shawshank Redemption",
-      "year": 1994,
-      "director": "Frank Darabont",
-      "duration": "2h 22min",
-      "genre": "Crime, Drama",
-      "rating": 9.3,
-      "votes": 678790,
-      "budget": 16000000,
-      "revenue": 136906000,
-      "category": "Drama",
+        "id": 1,
+        "title": "The Shawshank Redemption",
+        "year": 1994,
+        "director": "Frank Darabont",
+        "duration": "2h 22min",
+        "genre": "Crime, Drama",
+        "rating": 9.3,
+        "votes": 678790,
+        "budget": 16000000,
+        "revenue": 136906000,
+        "category": "Drama",
     },
     {
         "id": 2,
@@ -89,52 +90,85 @@ def message():
 def index():
     return movies
 
+
 @app.get("/movies/{id}", tags=["Movies"])
 def index(id: int):
     for item in movies:
         if item["id"] == id:
             return item
     else:
-      return []
+        return []
+
 
 @app.get("/movies/", tags=["Movies"])
 def index(category: str):
-  return [movie for movie in movies if movie["category"].lower() == category.lower()]
+    return [movie for movie in movies if movie["category"].lower() == category.lower()]
+
 
 @app.post("/movies", tags=["Movies"], response_model=list[Movie])
 def index(movie: Movie):
     movies.append(movie)
     return movies
 
-# def index(id: int = Body(...), title: str = Body(...), year: int = Body(...), director: str = Body(...), duration: str = Body(...), genre: str = Body(...), rating: float = Body(...), votes: int = Body(...), budget: int = Body(...), revenue: int = Body(...), category: str = Body(...)):
-    # movie = {
-    #     "id": id,
-    #     "title": title,
-    #     "year": year,
-    #     "director": director,
-    #     "duration": duration,
-    #     "genre": genre,
-    #     "rating": rating,
-    #     "votes": votes,
-    #     "budget": budget,
-    #     "revenue": revenue,
-    #     "category": category,
-    # }
 
-@app.patch("/movies/{id}", tags=["Movies"])
-def index(id: int, movie: dict = Body(...)):
+# @app.post("/movies", tags=["Movies"], response_model=list[Movie])
+# def index(id: int = Body(...), title: str = Body(...), year: int = Body(...), director: str = Body(...), duration: str = Body(...), genre: str = Body(...), rating: float = Body(...), votes: int = Body(...), budget: int = Body(...), revenue: int = Body(...), category: str = Body(...)):
+# movie = {
+#     "id": id,
+#     "title": title,
+#     "year": year,
+#     "director": director,
+#     "duration": duration,
+#     "genre": genre,
+#     "rating": rating,
+#     "votes": votes,
+#     "budget": budget,
+#     "revenue": revenue,
+#     "category": category,
+# }
+
+# @app.put("movies/{id}", tags=["Movies"], response_model=list[Movie])
+# def index(id: int, movie: Movie):
+#     update_item_encoded = jsonable_encoder(movie)
+#     for item in movies:
+#         if item["id"] == id:
+#             item.update(update_item_encoded)
+#             return movies
+#     else:
+#         return []
+
+# @app.put('/movies/{id}', tags=['Movies'])
+# def update_movie(id: int, title: str = Body(), overview:str = Body(), year:int = Body(), rating: float = Body(), category: str = Body()):
+# 	for item in movies:
+# 		if item["id"] == id:
+# 			item['title'] = title,
+# 			item['overview'] = overview,
+# 			item['year'] = year,
+# 			item['rating'] = rating,
+# 			item['category'] = category
+# 			return movies
+
+
+@app.put("/movies/{id}", tags=["Movies"], response_model=list[Movie])
+def update_movie(id: int, movie: Movie):
     for item in movies:
         if item["id"] == id:
-            item.update(movie)
-            return item
-    else:
-        return []
+            item["title"] = movie.title
+            item["year"] = movie.year
+            item["director"] = movie.director
+            item["duration"] = movie.duration
+            item["genre"] = movie.genre
+            item["votes"] = movie.votes
+            item["budget"] = movie.budget
+            item["revenue"] = movie.revenue
+            item["rating"] = movie.rating
+            item["category"] = movie.category
+            return movies
 
-@app.delete("/movies/{id}", tags=["Movies"])
-def index(id: int):
+
+@app.delete("/movies/{id}", tags=["Movies"], response_model=list[Movie])
+def delete_movie(id: int):
     for item in movies:
         if item["id"] == id:
             movies.remove(item)
             return movies
-    else:
-        return []
