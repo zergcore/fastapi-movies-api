@@ -1,19 +1,10 @@
 from pydantic import BaseModel, Field
+from typing import Optional
 import datetime
 
 class Movie(BaseModel):
-    '''
-    __tablename__ = 'movies'
-
-    id = Column(Integer, primary_key = True)
-    title = Column(String)
-    overview = Column(String)
-    year = Column(Integer)
-    rating = Column(Float)
-    category = Column(String)
-    '''
-
-    id: int = Field(gt=0)
+    # Model fields
+    id: Optional[int] = None
     title: str = Field(min_length=2, max_length=50)
     year: int = Field(le=datetime.date.today().year)
     director: str = Field(min_length=8, max_length=25)

@@ -1,5 +1,27 @@
 from pydantic import BaseModel, Field
 
-class User(BaseModel):
+class UserBase(BaseModel):
+    email: str
+
+class UserCreate(UserBase):
+    password: str
+
+class User(UserBase):
     email:str
-    password:str
+    # password:str
+    is_active: bool
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                 "email": "user@email.com",
+                 "password": "password",
+                #  "is_active": False
+                }
+            ]
+        },
+        "from_attributes": True # orm_mode
+    }
+
+    # Notice that the User, the Pydantic model that will be used when reading a user (returning it from the API) doesn't include the password

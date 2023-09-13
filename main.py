@@ -1,10 +1,16 @@
-from fastapi import FastAPI, Body, Path, Query
+from fastapi import FastAPI, Body, Path, Query, Depends, HTTPException
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 from typing import List
-from models.movie import Movie
-from models.user import User
+
 import json
+from models.movie import Movie as MovieModel
+from models.user import User as UserModel, UserCreate
+from crud import get_movies, get_user, get_user_by_email, get_users
+from config.database import Base, SessionLocal, engine
 from jwt_manager import create_token
+from database.movie import Movie
+from database.user import User
 
 app = FastAPI()
 app.title = "Movies API"
@@ -14,28 +20,60 @@ app.description = "API to get movies"
 app.contact = {"name": "Zaidibeth Ramos", "email": "zergcoredev@gmail.com"}
 app.license_info = {"name": "MIT", "url": "https://opensource.org/licenses/MIT"}
 app.openapi_tags = [{"name": "Home", "description": "Home page"}]
+
+Base.metadata.create_all(bind=engine)
+
+# Dependency
+def get_db():
+    db = Session()
+    try:
+        yield db
+    finally:
+        db.close()
+
 app.debug = True
 
 with open("movies.json") as f:
     movies = json.load(f)
 
-
+#path operations
 @app.get("/", tags=["Home"], response_class=JSONResponse, status_code=200, response_model=dict)
 def message():
     return JSONResponse(content={"message": "Hello World"}, status_code=200)
 
 @app.post('/login', tags=['auth'])
-def login(user: User):
+def login(user: UserCreate):
     if user.email == "admin@gmail.com" and user.password == "admin":
-        token: str = create_token(user.dict())
+        token: str = create_token(user.model_dump())
         return JSONResponse(status_code=200, content=token)
 
-@app.get("/movies", tags=["Movies"], response_model=List[Movie], status_code=200)
+@app.post("/users/", tags=["Users"], response_model=UserModel)
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = get_user_by_email(db, email=user.email)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    return create_user(db=db, user=user)
+
+
+@app.get("/users/", tags=["Users"], response_model=list[UserModel])
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = get_users(db, skip=skip, limit=limit)
+    return users
+
+
+@app.get("/users/{user_id}", tags=["Users"], response_model=UserModel)
+def read_user(user_id: int, db: Session = Depends(get_db)):
+    db_user = get_user(db, user_id=user_id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
+
+@app.get("/movies", tags=["Movies"], response_model=List[MovieModel], status_code=200)
 def index():
     return JSONResponse(content=movies, status_code=200)
 
 
-@app.get("/movies/{id}", tags=["Movies"], response_model=Movie, status_code=200)
+@app.get("/movies/{id}", tags=["Movies"], response_model=MovieModel, status_code=200)
 def index(id: int = Path(gt=0, le=len(movies))):
     for item in movies:
         if item["id"] == id:
@@ -44,7 +82,7 @@ def index(id: int = Path(gt=0, le=len(movies))):
         return JSONResponse(content=[], status_code=404)
 
 
-@app.get("/movies/", tags=["Movies"], response_model=List[Movie], status_code=200)
+@app.get("/movies/", tags=["Movies"], response_model=List[MovieModel], status_code=200)
 def index(category: str = Query(min_length=3, max_length=20)):
     data = [movie for movie in movies if movie["category"].lower() == category.lower()]
     if len(data) == 0:
@@ -53,12 +91,16 @@ def index(category: str = Query(min_length=3, max_length=20)):
 
 
 @app.post("/movies", tags=["Movies"], response_model=dict, status_code=201)
-def index(movie: Movie):
-    movies.append(movie)
-    return JSONResponse(content={message: "Movie added successfully"}, status_code=201)
+def index(movie: MovieModel):
+    db = SessionLocal()
+    new_movie = Movie(**movie.model_dump())
+    # movies.append(movie)
+    db.add(new_movie)
+    db.commit()
+    return JSONResponse(content={"message": "Movie added successfully"}, status_code=201)
 
 
-# @app.post("/movies", tags=["Movies"], response_model=list[Movie])
+# @app.post("/movies", tags=["Movies"], response_model=list[MovieModel])
 # def index(id: int = Body(...), title: str = Body(...), year: int = Body(...), director: str = Body(...), duration: str = Body(...), genre: str = Body(...), rating: float = Body(...), votes: int = Body(...), budget: int = Body(...), revenue: int = Body(...), category: str = Body(...)):
 # movie = {
 #     "id": id,
@@ -75,7 +117,7 @@ def index(movie: Movie):
 # }
 
 @app.put("/movies/{id}", tags=["Movies"], response_model=dict, status_code=200)
-def update_movie(id: int, movie: Movie):
+def update_movie(id: int, movie: MovieModel):
     for item in movies:
         if item["id"] == id:
             item["title"] = movie.title
@@ -101,3 +143,16 @@ def delete_movie(id: int):
             return JSONResponse(content = {message: "Movie deleted successfully"}, status_code = 200)
     else:
         return JSONResponse(content = {message: "Movie not found"}, status_code = 404)
+    
+
+# @app.post("/movies/", response_model=MovieModel)
+# def create_movie(
+#     movie: MovieModel, db: Session = Depends(get_db)
+# ):
+#     return create_movie(db=db, movie=movie)
+
+
+# @app.get("/movie/", response_model=list[MovieModel])
+# def read_movies(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+#     movies = get_movies(db, skip=skip, limit=limit)
+#     return movies
