@@ -1,9 +1,6 @@
-import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm.session import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
 from dotenv import load_dotenv
 import os
+from sqlmodel import Field, Session, SQLModel, create_engine
 
 load_dotenv()
 
@@ -14,6 +11,6 @@ database_url = f"sqlite:///{os.path.join(base_dir, SQLALCHEMY_DATABASE_URL)}"
 
 engine = create_engine(database_url, echo=True, connect_args={"check_same_thread": False})
 
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+SessionLocal = Session(engine)
 
-Base = declarative_base()
+# Base = declarative_base()
