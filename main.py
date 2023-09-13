@@ -1,5 +1,9 @@
 from fastapi import FastAPI, Body, Path, Query, Depends, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+# from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+# from pydantic import BaseModel
+# from models.movie import Movie as MovieModel
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -70,24 +74,39 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 @app.get("/movies", tags=["Movies"], response_model=List[MovieModel], status_code=200)
 def index():
-    return JSONResponse(content=movies, status_code=200)
+    # return JSONResponse(content=movies, status_code=200)
+    db = SessionLocal()
+    result = db.query(Movie).all()
+    return JSONResponse(content=jsonable_encoder(result), status_code=200)
 
 
 @app.get("/movies/{id}", tags=["Movies"], response_model=MovieModel, status_code=200)
-def index(id: int = Path(gt=0, le=len(movies))):
-    for item in movies:
-        if item["id"] == id:
-            return JSONResponse(content=item, status_code=200)
+def index(id: int = Path(gt=0)):
+    db = SessionLocal()
+    result = db.query(Movie).filter(Movie.id == id).first()
+    if result:
+        return JSONResponse(content=jsonable_encoder(result), status_code=200)
     else:
-        return JSONResponse(content=[], status_code=404)
+        return JSONResponse(content={"message": "Movie not found"}, status_code=404)
+    # for item in movies:
+    #     if item["id"] == id:
+    #         return JSONResponse(content=item, status_code=200)
+    # else:
+    #     return JSONResponse(content=[], status_code=404)
 
 
 @app.get("/movies/", tags=["Movies"], response_model=List[MovieModel], status_code=200)
 def index(category: str = Query(min_length=3, max_length=20)):
-    data = [movie for movie in movies if movie["category"].lower() == category.lower()]
-    if len(data) == 0:
-        return JSONResponse(content=[], status_code=404)
-    return JSONResponse(content=data, status_code=200)
+    db = SessionLocal()
+    result = db.query(Movie).filter(Movie.category.like("%" + category.lower() + "%")).all()
+    if result:
+        return JSONResponse(content=jsonable_encoder(result), status_code=200)
+    else:
+        return JSONResponse(content={"message": "Category not found"}, status_code=404)
+    # data = [movie for movie in movies if movie["category"].lower() == category.lower()]
+    # if len(data) == 0:
+    #     return JSONResponse(content=[], status_code=404)
+    # return JSONResponse(content=data, status_code=200)
 
 
 @app.post("/movies", tags=["Movies"], response_model=dict, status_code=201)
@@ -118,31 +137,57 @@ def index(movie: MovieModel):
 
 @app.put("/movies/{id}", tags=["Movies"], response_model=dict, status_code=200)
 def update_movie(id: int, movie: MovieModel):
-    for item in movies:
-        if item["id"] == id:
-            item["title"] = movie.title
-            item["year"] = movie.year
-            item["director"] = movie.director
-            item["duration"] = movie.duration
-            item["genre"] = movie.genre
-            item["votes"] = movie.votes
-            item["budget"] = movie.budget
-            item["revenue"] = movie.revenue
-            item["rating"] = movie.rating
-            item["category"] = movie.category
-            JSONResponse(content = {message: "Movie updated successfully"}, status_code = 200)
+    db = SessionLocal()
+    result = db.query(Movie).filter(Movie.id == id).first()
+    if not result:
+        return JSONResponse(content={"message": "Movie not found"}, status_code=404)
     else:
-        return JSONResponse(content = {message: "Movie not found"}, status_code = 404)
+        result.title = movie.title
+        result.budget = movie.budget
+        result.revenue = movie.revenue
+        result.rating = movie.rating
+        result.votes = movie.votes
+        result.duration = movie.duration
+        result.category = movie.category
+        result.director = movie.director
+        result.genre = movie.genre
+        result.year = movie.year
+        db.commit()
+        return JSONResponse(content={"message": "Movie updated successfully"}, status_code=201)
+    
+    # for item in movies:
+    #     if item["id"] == id:
+    #         item["title"] = movie.title
+    #         item["year"] = movie.year
+    #         item["director"] = movie.director
+    #         item["duration"] = movie.duration
+    #         item["genre"] = movie.genre
+    #         item["votes"] = movie.votes
+    #         item["budget"] = movie.budget
+    #         item["revenue"] = movie.revenue
+    #         item["rating"] = movie.rating
+    #         item["category"] = movie.category
+    #         JSONResponse(content = {message: "Movie updated successfully"}, status_code = 200)
+    # else:
+    #     return JSONResponse(content = {message: "Movie not found"}, status_code = 404)
 
 
 @app.delete("/movies/{id}", tags=["Movies"], response_model=dict, status_code=200)
 def delete_movie(id: int):
-    for item in movies:
-        if item["id"] == id:
-            movies.remove(item)
-            return JSONResponse(content = {message: "Movie deleted successfully"}, status_code = 200)
+    db = SessionLocal()
+    result = db.query(Movie).filter(Movie.id == id).first()
+    if not result:
+        return JSONResponse(content={"message": "Movie not found"}, status_code=404)
     else:
-        return JSONResponse(content = {message: "Movie not found"}, status_code = 404)
+        db.delete(result)
+        db.commit()
+        return JSONResponse(content={"message": "Movie deleted successfully"}, status_code=200)
+    # for item in movies:
+    #     if item["id"] == id:
+    #         movies.remove(item)
+    #         return JSONResponse(content = {message: "Movie deleted successfully"}, status_code = 200)
+    # else:
+    #     return JSONResponse(content = {message: "Movie not found"}, status_code = 404)
     
 
 # @app.post("/movies/", response_model=MovieModel)
