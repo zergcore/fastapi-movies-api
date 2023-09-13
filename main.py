@@ -1,8 +1,10 @@
 from fastapi import FastAPI, Body, Path, Query
 from fastapi.responses import JSONResponse
-from typing import List, Optional
+from typing import List
 from models.movie import Movie
+from models.user import User
 import json
+from jwt_manager import create_token
 
 app = FastAPI()
 app.title = "Movies API"
@@ -22,6 +24,11 @@ with open("movies.json") as f:
 def message():
     return JSONResponse(content={"message": "Hello World"}, status_code=200)
 
+@app.post('/login', tags=['auth'])
+def login(user: User):
+    if user.email == "admin@gmail.com" and user.password == "admin":
+        token: str = create_token(user.dict())
+        return JSONResponse(status_code=200, content=token)
 
 @app.get("/movies", tags=["Movies"], response_model=List[Movie], status_code=200)
 def index():
