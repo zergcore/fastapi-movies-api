@@ -20,12 +20,11 @@ def get_users(db: SessionLocal, skip: int = 0, limit: int = 100):
     return db.exec(statement).all()
 
 
-def create_user(db: SessionLocal, user: User):
+def create_user_db(db: SessionLocal, user: User):
     fake_hashed_password = user.password + "notreallyhashed"
     db_user = User(email=user.email, password=fake_hashed_password, is_active=True)
     db.add(db_user)
     db.commit()
-    # db.refresh(db_user)
     return db_user
 
 
@@ -38,5 +37,4 @@ def create_movie(db: SessionLocal, movie: Movie):
     db_movie = Movie(**movie.dict())
     db.add(db_movie)
     db.commit()
-    # db.refresh(db_movie)
     return db_movie

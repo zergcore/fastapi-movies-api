@@ -1,10 +1,8 @@
 import datetime
 from typing import Optional
-
-from sqlmodel import Field, Session, SQLModel, create_engine
+from sqlmodel import Field, SQLModel
 
 class Movie(SQLModel, table=True):
-    # Model fields
     id: Optional[int] = Field(default=None, primary_key=True)
     title: str = Field(min_length=2, max_length=50)
     year: int = Field(le=datetime.date.today().year)

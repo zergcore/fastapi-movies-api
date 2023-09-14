@@ -7,7 +7,7 @@ from sqlmodel import Session, SQLModel, select
 
 from models.movie import Movie
 from models.user import User
-from crud import get_movies, get_user, get_user_by_email, get_users
+from crud import get_user, get_user_by_email, get_users
 from config.database import engine
 from jwt_manager import create_token
 
@@ -46,7 +46,12 @@ def create_user(user: User):
         db_user = get_user_by_email(db, email=user.email)
         if db_user:
             raise HTTPException(status_code=400, detail="Email already registered")
-        return create_user(db=db, user=user)
+        else:
+            fake_hashed_password = user.password + "notreallyhashed"
+            db_user = User(email=user.email, password=fake_hashed_password, is_active=True)
+            db.add(db_user)
+            db.commit()
+            return JSONResponse(content={"message": "User added successfully"}, status_code=201)
 
 
 @app.get("/users/", tags=["Users"], response_model=list[User])
@@ -98,7 +103,7 @@ def create_movie(movie: Movie):
     with Session(engine) as db:
         db.add(movie)
         db.commit()
-    return JSONResponse(content={"message": "Movie added successfully"}, status_code=201)
+        return JSONResponse(content={"message": "Movie added successfully"}, status_code=201)
 
 
 @app.put("/movies/{id}", tags=["Movies"], response_model=dict, status_code=200)

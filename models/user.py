@@ -1,8 +1,8 @@
 from sqlmodel import Field, SQLModel
+from typing import Optional
 
 class User(SQLModel, table=True):
-    email: str = Field(primary_key=True)
-    password:str
-    is_active: bool
-
-    # Notice that the User, the Pydantic model that will be used when reading a user (returning it from the API) doesn't include the password
+    id: Optional[int] = Field(default=None, primary_key=True)
+    email: str = Field(min_length=8)
+    password:str = Field(min_length=8)
+    is_active: bool = Field(default=True)
