@@ -1,13 +1,10 @@
 from fastapi import FastAPI, Body, Path, Query, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-# from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-# from pydantic import BaseModel
-# from models.movie import Movie as MovieModel
 from sqlalchemy.orm import Session
 from typing import List
-
 import json
+
 from models.movie import Movie as MovieModel
 from models.user import User as UserModel, UserCreate
 from crud import get_movies, get_user, get_user_by_email, get_users
@@ -15,15 +12,18 @@ from config.database import Base, SessionLocal, engine
 from jwt_manager import create_token
 from database.movie import Movie
 from database.user import User
+from middlewares.error_handler import ErrorHandler
+from middlewares.jwt_bearer import JWTBearer
 
 app = FastAPI()
 app.title = "Movies API"
 app.version = "0.0.1"
 app.description = "API to get movies"
-# app.terms_of_service = "None yet"
 app.contact = {"name": "Zaidibeth Ramos", "email": "zergcoredev@gmail.com"}
 app.license_info = {"name": "MIT", "url": "https://opensource.org/licenses/MIT"}
 app.openapi_tags = [{"name": "Home", "description": "Home page"}]
+
+app.add_middleware(ErrorHandler)
 
 Base.metadata.create_all(bind=engine)
 
@@ -48,7 +48,7 @@ def message():
 @app.post('/login', tags=['auth'])
 def login(user: UserCreate):
     if user.email == "admin@gmail.com" and user.password == "admin":
-        token: str = create_token(user.model_dump())
+        token: str = create_token(user.dict())
         return JSONResponse(status_code=200, content=token)
 
 @app.post("/users/", tags=["Users"], response_model=UserModel)
@@ -72,9 +72,8 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
 
-@app.get("/movies", tags=["Movies"], response_model=List[MovieModel], status_code=200)
+@app.get("/movies", tags=["Movies"], response_model=List[MovieModel], status_code=200, dependencies=[Depends(JWTBearer())])
 def index():
-    # return JSONResponse(content=movies, status_code=200)
     db = SessionLocal()
     result = db.query(Movie).all()
     return JSONResponse(content=jsonable_encoder(result), status_code=200)
