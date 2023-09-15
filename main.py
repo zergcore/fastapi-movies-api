@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import json
+import uvicorn
+import os
 
 from schemas.user import UserCreate, User as UserModel
 from database.movie import Movie
@@ -45,3 +47,7 @@ def login(user: UserCreate):
     if user.email == "admin@gmail.com" and user.password == "admin":
         token: str = create_token(user.dict())
         return JSONResponse(status_code=200, content=token)
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0",
+                port=int(os.environ.get("PORT", 8000)))
