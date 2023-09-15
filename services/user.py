@@ -1,5 +1,5 @@
 import database
-from models.user import UserCreate, User
+from schemas.user import UserCreate, User
 
 class UserService:
   def __init__(self, db):

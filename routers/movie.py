@@ -4,7 +4,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from typing import List
 
-from models.movie import Movie as MovieModel
+from schemas.movie import Movie as MovieModel
 from database.movie import Movie
 from config.database import get_db
 from middlewares.jwt_bearer import JWTBearer

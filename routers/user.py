@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import List
 
-from models.user import UserCreate, User as UserModel
+from schemas.user import UserCreate, User as UserModel
 from database.user import User
 from config.database import get_db
 from services.user import UserService

@@ -2,10 +2,10 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import json
 
-from models.user import UserCreate, User as UserModel
+from schemas.user import UserCreate, User as UserModel
 from database.movie import Movie
 from config.database import Base, engine, SessionLocal
-from jwt_manager import create_token
+from utils.jwt_manager import create_token
 from middlewares.error_handler import ErrorHandler
 from routers.movie import movie_router
 from routers.user import user_router

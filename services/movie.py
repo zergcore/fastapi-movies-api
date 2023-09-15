@@ -1,5 +1,5 @@
 import database
-from models.movie import Movie
+from schemas.movie import Movie
 
 class MovieService:
   def __init__(self, db):

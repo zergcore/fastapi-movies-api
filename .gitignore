@@ -1,5 +1,5 @@
-# Created by https://www.toptal.com/developers/gitignore/api/macos,windows,linux,python,pythonvanilla,circuitpython
-# Edit at https://www.toptal.com/developers/gitignore?templates=macos,windows,linux,python,pythonvanilla,circuitpython
+#database
+database.sqlite
 
 ### CircuitPython ###
 .Trashes
@@ -279,4 +279,5 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/macos,windows,linux,python,pythonvanilla,circuitpython
+database.sqlite
+
